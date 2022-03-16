@@ -1,7 +1,7 @@
 const express = require('express')
 const books = express.Router()
 const Book = require('../model/book.js')
-
+require("mongoose");
 /*
 books.get('/seed', (req, res) => {
     Book.insertMany([{
@@ -57,9 +57,9 @@ books.post('/', (req, res) => {
         year: req.body.year,
         quantity: req.body.quantity,
         imageURL: req.body.imageURL
-    }, createdBook => {
+    }, ).then(createdBook => {
         res.status(201).json(createdBook)
-    })
+    }, err => res.status(500).json({"status": err.message}))
 })
 
 books.get('/:id', (req, res) => {
@@ -79,7 +79,7 @@ books.put('/:id', (req, res) => {
         year: req.body.year,
         quantity: req.body.quantity,
         imageURL: req.body.imageURL
-    }, null, (err, doc) => {
+    }, null, err => {
         if (err) {
             res.status(500).json({"status": "An error occurred"})
         } else {
@@ -95,17 +95,7 @@ books.put('/:id', (req, res) => {
 
 //Partial update of document
 books.patch('/:id', (req, res) => {
-    let bookUpdated
-    Book.findById(req.params.id)
-        .then(prevBook => {
-            bookUpdated = prevBook
-        })
-    if (req.body.title) {bookUpdated.title = req.body.title}
-    if (req.body.description) {bookUpdated.description = req.body.description}
-    if (req.body.year) {bookUpdated.year = req.body.year}
-    if (req.body.quantity) {bookUpdated.quantity = req.body.quantity}
-    if (req.body.imageURL) {bookUpdated.imageURL = req.body.imageURL}
-    Book.findByIdAndUpdate(req.params.id, bookUpdated, null, (err, doc) => {
+    Book.findByIdAndUpdate(req.params.id, req.body, {new: true}, (err, doc) => {
         if(doc) {
             res.json(doc)
         } else {
@@ -115,7 +105,7 @@ books.patch('/:id', (req, res) => {
 })
 
 books.delete('/:id', (req, res) => {
-    Book.findByIdAndDelete(req.params.id, null, (err, doc, re) => {
+    Book.findByIdAndDelete(req.params.id, null, (err, doc) => {
         if(doc != null) {
             res.json({"status": "Success"})
         } else {
